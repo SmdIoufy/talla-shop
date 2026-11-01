@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boutique</title>
+<style>
+  :root{--bg:#0e0e10;--card:#1a1a1e;--line:#2a2a30;--txt:#f4f4f5;--mut:#9a9aa3;--acc:#25d366;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
+  header{position:sticky;top:0;z-index:20;background:rgba(14,14,16,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;max-width:1100px;margin:auto}
+  .logo{font-weight:800;letter-spacing:2px;font-size:18px}
+  .cartbtn{background:none;border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:15px}
+  .cartbtn b{background:var(--acc);color:#000;border-radius:999px;padding:1px 8px;margin-left:6px;font-size:13px}
+  nav{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;max-width:1100px;margin:auto}
+  nav button{white-space:nowrap;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 16px;border-radius:999px;cursor:pointer;font-size:14px}
+  nav button.on{background:var(--txt);color:#000}
+  main{max-width:1100px;margin:auto;padding:20px 16px 80px}
+  h2{font-size:22px;margin-bottom:4px}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+  .p{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .img{aspect-ratio:1/1;background:#26262c;display:flex;align-items:center;justify-content:center;font-size:54px;cursor:pointer}
+  .img img{width:100%;height:100%;object-fit:cover}
+  .pi{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .pn{font-weight:600;font-size:15px}
+  .pp{font-weight:700}
+  .add{margin-top:auto;background:var(--txt);color:#000;border:0;border-radius:10px;padding:10px;font-weight:700;cursor:pointer}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;z-index:30}
+  .ov.open{display:block}
+  .panel{position:absolute;right:0;top:0;bottom:0;width:min(420px,100%);background:var(--card);padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+  .modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,94%);max-height:92vh;overflow-y:auto;background:var(--card);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .x{background:none;border:0;color:var(--txt);font-size:24px;cursor:pointer}
+  .main-img{aspect-ratio:1/1;background:#26262c;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:70px}
+  .main-img img{width:100%;height:100%;object-fit:cover}
+  .thumbs{display:flex;gap:8px;overflow-x:auto}
+  .thumbs img{width:56px;height:56px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer}
+  .thumbs img.on{border-color:var(--txt)}
+  .desc{color:var(--mut);font-size:14px;line-height:1.5;white-space:pre-line}
+  .sizes{display:flex;flex-wrap:wrap;gap:8px}
+  .sizes button{background:none;border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:8px;cursor:pointer}
+  .sizes button.on{background:var(--txt);color:#000}
+  .item{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:8px 0;font-size:14px}
+  .item small{color:var(--mut);display:block}
+  .qty button{background:var(--line);border:0;color:var(--txt);width:26px;height:26px;border-radius:6px;cursor:pointer}
+  input{width:100%;background:#111;border:1px solid var(--line);color:var(--txt);padding:12px;border-radius:10px;font-size:15px}
+  .wa{background:var(--acc);color:#000;border:0;border-radius:12px;padding:14px;font-weight:800;font-size:16px;cursor:pointer}
+  .err{color:#ff6b6b;font-size:13px;min-height:16px}
+  .total{font-size:18px;font-weight:800}
+  .pc{color:var(--mut);font-size:13px}
+  .empty{color:var(--mut);padding:40px 0;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo" id="logo"></div>
+    <button class="cartbtn" onclick="openCart()">🛒 Panier<b id="count">0</b></button>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <h2 id="title">La Collection</h2>
+  <div class="sub" id="sub"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">Aucun produit pour le moment.</div>
+</main>
+
+<!-- Fiche produit -->
+<div class="ov" id="pov" onclick="if(event.target===this)closeP()">
+  <div class="modal">
+    <div class="row"><strong id="pm-name"></strong><button class="x" onclick="closeP()">×</button></div>
+    <div class="main-img" id="pm-img"></div>
+    <div class="thumbs" id="pm-thumbs"></div>
+    <div class="pp" id="pm-price"></div>
+    <div class="desc" id="pm-desc"></div>
+    <div id="pm-sizes-wrap"><div class="pc" style="margin-bottom:6px">Taille / Pointure</div><div class="sizes" id="pm-sizes"></div></div>
+    <div class="err" id="pm-err"></div>
+    <button class="add" onclick="confirmAdd()">Ajouter au panier</button>
+  </div>
+</div>
+
+<!-- Panier + formulaire -->
+<div class="ov" id="cov" onclick="if(event.target===this)closeCart()">
+  <div class="panel">
+    <div class="row"><h2>Votre panier</h2><button class="x" onclick="closeCart()">×</button></div>
+    <div id="items"></div>
+    <div class="row total"><span>TOTAL</span><span id="total"></span></div>
+    <div id="form">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="prenom" placeholder="Prénom">
+        <input id="nom" placeholder="Nom">
+        <input id="adresse" placeholder="Adresse de livraison">
+        <input id="tel" placeholder="Numéro de téléphone" inputmode="tel">
+        <div class="err" id="err"></div>
+        <button class="wa" onclick="sendWhatsApp()">Continuer sur WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => Number(n).toLocaleString("fr-FR").replace(/[\u202f\u00a0]/g," ") + " " + CONFIG.CURRENCY;
+
+let categories = [], products = [], cat = "all", cur = null, curSize = null;
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch(e) {}
+
+document.title = CONFIG.STORE_NAME;
+$("logo").textContent = CONFIG.STORE_NAME;
+
+async function load(){
+  const [c, p] = await Promise.all([
+    sb.from("categories").select("*").order("position").order("name"),
+    sb.from("products").select("*").eq("active", true).order("created_at", {ascending:false})
+  ]);
+  categories = c.data || []; products = p.data || [];
+  if(c.error || p.error){ $("sub").textContent = "Impossible de charger les produits."; }
+  renderNav(); renderGrid(); renderCart();
+}
+
+function renderNav(){
+  const all = [{id:"all", name:"La Collection", emoji:""}, ...categories];
+  $("nav").innerHTML = all.map(c =>
+    `<button class="${c.id===cat?'on':''}" data-id="${esc(c.id)}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("");
+  $("nav").querySelectorAll("button").forEach(b => b.onclick = () => { cat = b.dataset.id; renderNav(); renderGrid(); });
+}
+function renderGrid(){
+  const list = products.filter(p => cat==="all" || p.category_id===cat);
+  const c = categories.find(c => c.id===cat);
+  $("title").textContent = c ? `${c.emoji||""} ${c.name}` : "La Collection";
+  $("sub").textContent = list.length + " produit" + (list.length>1?"s":"") + " disponible" + (list.length>1?"s":"");
+  $("empty").style.display = list.length ? "none" : "block";
+  $("grid").innerHTML = list.map(p => `
+    <div class="p">
+      <div class="img" onclick="openP('${p.id}')">${p.images?.[0] ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy">` : "🛍️"}</div>
+      <div class="pi">
+        <div class="pn">${esc(p.name)}</div>
+        <div class="pp">${fmt(p.price)}</div>
+        <button class="add" onclick="openP('${p.id}')">Ajouter au panier</button>
+      </div>
+    </div>`).join("");
+}
+
+function showImg(i){
+  const imgs = cur.images || [];
+  $("pm-img").innerHTML = imgs[i] ? `<img src="${esc(imgs[i])}" alt="">` : "🛍️";
+  $("pm-thumbs").querySelectorAll("img").forEach((t,k) => t.classList.toggle("on", k===i));
+}
+function openP(id){
+  cur = products.find(p => p.id===id); curSize = null;
+  const imgs = cur.images || [];
+  $("pm-name").textContent = cur.name;
+  $("pm-price").textContent = fmt(cur.price);
+  $("pm-desc").textContent = cur.description || "";
+  $("pm-err").textContent = "";
+  $("pm-thumbs").innerHTML = imgs.length > 1 ? imgs.map((u,i) => `<img src="${esc(u)}" onclick="showImg(${i})" alt="">`).join("") : "";
+  showImg(0);
+  const sizes = cur.sizes || [];
+  $("pm-sizes-wrap").style.display = sizes.length ? "block" : "none";
+  $("pm-sizes").innerHTML = sizes.map(s => `<button data-s="${esc(s)}">${esc(s)}</button>`).join("");
+  $("pm-sizes").querySelectorAll("button").forEach(b => b.onclick = () => {
+    curSize = b.dataset.s;
+    $("pm-sizes").querySelectorAll("button").forEach(x => x.classList.remove("on")); b.classList.add("on");
+  });
+  $("pov").classList.add("open");
+}
+function closeP(){ $("pov").classList.remove("open"); }
+function confirmAdd(){
+  if((cur.sizes||[]).length && !curSize){ $("pm-err").textContent = "Veuillez choisir une taille."; return; }
+  const f = cart.find(i => i.id===cur.id && i.size===curSize);
+  if(f) f.qty++; else cart.push({id:cur.id, name:cur.name, price:cur.price, size:curSize, qty:1});
+  save(); closeP(); openCart();
+}
+
+function save(){ try{ localStorage.setItem("cart", JSON.stringify(cart)); }catch(e){} renderCart(); }
+function change(i,d){ cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1); save(); }
+function total(){ return cart.reduce((s,i) => s + i.price*i.qty, 0); }
+function renderCart(){
+  $("count").textContent = cart.reduce((s,i) => s+i.qty, 0);
+  $("items").innerHTML = cart.length ? cart.map((i,k) => `
+    <div class="item">
+      <div>${esc(i.name)}<small>${i.size ? "Taille: "+esc(i.size)+" · " : ""}${fmt(i.price)}</small></div>
+      <div class="qty"><button onclick="change(${k},-1)">−</button> ${i.qty} <button onclick="change(${k},1)">+</button></div>
+    </div>`).join("") : '<div class="pc">Votre panier est vide.</div>';
+  $("total").textContent = fmt(total());
+  $("form").style.display = cart.length ? "block" : "none";
+}
+function openCart(){ renderCart(); $("cov").classList.add("open"); }
+function closeCart(){ $("cov").classList.remove("open"); }
+
+function sendWhatsApp(){
+  const prenom=$("prenom").value.trim(), nom=$("nom").value.trim(), adresse=$("adresse").value.trim(), tel=$("tel").value.trim();
+  if(!prenom||!nom||!adresse||!tel){ $("err").textContent="Veuillez remplir tous les champs."; return; }
+  if(tel.replace(/\D/g,"").length < 8){ $("err").textContent="Numéro de téléphone invalide."; return; }
+  $("err").textContent = "";
+  const lines = cart.map(i => `• ${i.name}${i.size?` (Taille: ${i.size})`:""} x${i.qty} = ${fmt(i.price*i.qty)}`).join("\n");
+  const msg =
+`🛍️ *NOUVELLE COMMANDE*
+
+👤 *Client:* ${prenom} ${nom}
+📍 *Adresse:* ${adresse}
+📞 *Tel:* ${tel}
+
+🛒 *PANIER:*
+${lines}
+
+💰 *TOTAL : ${fmt(total())}*`;
+  window.location.href = "https://wa.me/" + CONFIG.WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg);
+}
+
+load();
+</script>
+</body>
+</html>
