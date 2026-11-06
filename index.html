@@ -3,19 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boutique</title>
+<title>Talla Shop</title>
 <style>
   :root{--bg:#0e0e10;--card:#1a1a1e;--line:#2a2a30;--txt:#f4f4f5;--mut:#9a9aa3;--acc:#25d366;}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
   header{position:sticky;top:0;z-index:20;background:rgba(14,14,16,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
   .bar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;max-width:1100px;margin:auto}
-  .logo{font-weight:800;letter-spacing:2px;font-size:18px}
+.logo {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.logo img {
+    display: block;
+    width: 180px;
+    height: 65px;
+    object-fit: contain;
+    object-position: left center;
+}
+  .password-link{display:inline-block;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 11px;border-radius:999px;text-decoration:none;font-size:12px;white-space:nowrap}
+  .password-link:hover{background:var(--line)}
   .cartbtn{background:none;border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:15px}
   .cartbtn b{background:var(--acc);color:#000;border-radius:999px;padding:1px 8px;margin-left:6px;font-size:13px}
-  nav{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;max-width:1100px;margin:auto}
-  nav button{white-space:nowrap;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 16px;border-radius:999px;cursor:pointer;font-size:14px}
-  nav button.on{background:var(--txt);color:#000}
+  header nav{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;max-width:1100px;margin:auto}
+  header nav button{white-space:nowrap;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 16px;border-radius:999px;cursor:pointer;font-size:14px}
+  header nav button.on{background:var(--txt);color:#000}
   main{max-width:1100px;margin:auto;padding:20px 16px 80px}
   h2{font-size:22px;margin-bottom:4px}
   .sub{color:var(--mut);font-size:14px;margin-bottom:18px}
@@ -51,15 +66,34 @@
   .total{font-size:18px;font-weight:800}
   .pc{color:var(--mut);font-size:13px}
   .empty{color:var(--mut);padding:40px 0;text-align:center}
+  .site-footer{margin-top:32px;padding:30px 16px 20px;background:var(--card);border-top:1px solid var(--line);text-align:center}
+  .footer-brand{font-weight:800;letter-spacing:2px;font-size:18px}
+  .footer-note{margin-top:8px;color:var(--mut);font-size:13px}
+  .social-links{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap;margin:22px auto}
+  .social-links a,.social-links span{color:var(--txt);font-size:14px;text-decoration:none}
+  .social-links a:hover{text-decoration:underline}
+  .social-links .unavailable{color:var(--mut)}
+  .footer-copyright{border-top:1px solid var(--line);padding-top:16px;color:var(--mut);font-size:12px}
+  @media(max-width:480px){
+    .bar{gap:8px;padding:12px}
+    .logo{gap:7px;font-size:14px;letter-spacing:1px}
+    .logo img{width:36px;height:36px}
+    .password-link{font-size:10px;padding:7px 8px;white-space:normal;text-align:center;max-width:105px}
+    .cartbtn{padding:7px 9px;font-size:13px;white-space:nowrap}
+    .social-links{gap:14px}
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
-    <div class="logo" id="logo"></div>
-    <button class="cartbtn" onclick="openCart()">🛒 Panier<b id="count">0</b></button>
+    <a class="logo" id="logo" href="index.html" aria-label="Accueil Talla Shop">
+    <img src="assets/logo.png" alt="Logo Talla Shop">
+    </a>
+    
+    <button class="cartbtn" onclick="openCart()" type="button">🛒 Panier<b id="count">0</b></button>
   </div>
-  <nav id="nav"></nav>
+  <nav id="nav" aria-label="Catégories de produits"></nav>
 </header>
 <main>
   <h2 id="title">La Collection</h2>
@@ -101,6 +135,18 @@
   </div>
 </div>
 
+<footer class="site-footer">
+  <div class="footer-brand">TALLA SHOP</div>
+  <p class="footer-note">Merci de faire confiance à notre boutique.</p>
+  <nav class="social-links" aria-label="Réseaux sociaux">
+    <a href="https://www.instagram.com/mourtalla__smd/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <a href="https://www.snapchat.com/add/mourtalla_smd" target="_blank" rel="noopener noreferrer">Snapchat</a>
+    <a href="https://www.tiktok.com/@mourtalla_smd1" target="_blank" rel="noopener noreferrer">TikTok</a>
+    
+  </nav>
+  <p class="footer-copyright">&copy; <span id="footerYear">2026</span> SMD781247668. Tous droits réservés.</p>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
@@ -114,7 +160,8 @@ let cart = [];
 try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch(e) {}
 
 document.title = CONFIG.STORE_NAME;
-$("logo").textContent = CONFIG.STORE_NAME;
+$("logo").innerHTML = '<img src="assets/logo.png" alt="Logo Talla Shop">';;
+$("footerYear").textContent = new Date().getFullYear();
 
 async function load(){
   const [c, p] = await Promise.all([

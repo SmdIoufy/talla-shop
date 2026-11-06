@@ -1,0 +1,8 @@
+schemaname,tablename,policyname,permissive,roles,cmd,qual,with_check
+public,categories,admin categories,PERMISSIVE,{authenticated},ALL,true,true
+public,categories,visiteurs lisent categories,PERMISSIVE,{public},SELECT,true,null
+public,products,admin produits,PERMISSIVE,{authenticated},ALL,true,true
+public,products,visiteurs lisent produits actifs,PERMISSIVE,{public},SELECT,(active = true),null
+storage,objects,admin modifie photos,PERMISSIVE,{authenticated},UPDATE,(bucket_id = 'products'::text),null
+storage,objects,admin supprime photos,PERMISSIVE,{authenticated},DELETE,(bucket_id = 'products'::text),null
+storage,objects,admin upload photos,PERMISSIVE,{authenticated},INSERT,null,(bucket_id = 'products'::text)
