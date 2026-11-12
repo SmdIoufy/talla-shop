@@ -23,10 +23,10 @@
   .btn.green{background:var(--acc)} .btn.ghost{background:none;color:var(--txt);border:1px solid var(--line)} .btn.red{background:none;color:var(--red);border:1px solid var(--red)}
   .btn:disabled{opacity:.5;cursor:wait}
   .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
-  .list .it{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+  .list .it{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .list .it:last-child{border:0}
   .th{width:56px;height:56px;border-radius:10px;background:#26262c;object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px}
-  .grow{flex:1;min-width:0} .grow b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .grow{flex:1;min-width:160px} .grow b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .mut{color:var(--mut);font-size:13px}
   .imgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .imgs .i{position:relative}
@@ -79,6 +79,10 @@
         <label>Catégorie</label><select id="pCat"></select>
         <label>Tailles disponibles (séparées par des virgules, laisser vide si aucune)</label>
         <input id="pSizes" placeholder="S, M, L, XL  ou  40, 41, 42, 43">
+        <label>Couleurs disponibles (séparées par des virgules, laisser vide si aucune)</label>
+        <input id="pColors" placeholder="Noir, Blanc, Rouge">
+        <label>Stock (quantité disponible, vide = illimité)</label>
+        <input id="pStock" type="number" min="0" inputmode="numeric" placeholder="10">
         <label>Description / informations</label><textarea id="pDesc" placeholder="Couleur, matière, état, détails…"></textarea>
         <label>Photos (vous pouvez en choisir plusieurs)</label>
         <input id="pFiles" type="file" accept="image/*" multiple onchange="previewNew()">
@@ -195,8 +199,10 @@ function renderProducts(){
   $("pList").innerHTML = products.length ? products.map(p => {
     const c = categories.find(c => c.id===p.category_id);
     const th = p.images?.[0] ? `<img class="th" src="${esc(p.images[0])}" alt="">` : `<div class="th">🛍️</div>`;
+    const stockTxt = p.stock==null ? "Stock illimité" : (p.stock===0 ? "ÉPUISÉ" : "Stock : "+p.stock);
     return `<div class="it">${th}
-      <div class="grow"><b>${esc(p.name)}</b><span class="mut">${fmt(p.price)} · ${esc(c?.name || "Sans catégorie")}${p.active ? "" : " · masqué"}</span></div>
+      <div class="grow"><b>${esc(p.name)}</b><span class="mut">${fmt(p.price)} · ${esc(c?.name || "Sans catégorie")} · ${stockTxt}${p.active ? "" : " · masqué"}</span></div>
+      ${p.stock==null ? "" : `<button class="btn ghost" onclick="adjustStock('${p.id}',-1)">−1</button><button class="btn ghost" onclick="adjustStock('${p.id}',1)">+1</button>`}
       <button class="btn ghost" onclick="editProduct('${p.id}')">Modifier</button>
       <button class="btn red" onclick="deleteProduct('${p.id}')">Supprimer</button>
     </div>`; }).join("") : '<div class="mut">Aucun produit. Ajoutez le premier ci-dessus.</div>';
@@ -210,11 +216,13 @@ function drawImgs(){
 function removeKept(i){ keptImages.splice(i,1); drawImgs(); }
 function previewNew(){ drawImgs(); }
 function resetProduct(){
+  $("pColors").value=""; $("pStock").value="";
   $("pId").value=""; $("pName").value=""; $("pPrice").value=""; $("pCat").value=""; $("pSizes").value=""; $("pDesc").value="";
   $("pFiles").value=""; $("pActive").checked=true; keptImages=[]; drawImgs(); $("pTitle").textContent="Ajouter un produit";
 }
 function editProduct(id){
   const p = products.find(x => x.id===id);
+  $("pColors").value=(p.colors||[]).join(", "); $("pStock").value=p.stock ?? "";
   $("pId").value=p.id; $("pName").value=p.name; $("pPrice").value=p.price; $("pCat").value=p.category_id||"";
   $("pSizes").value=(p.sizes||[]).join(", "); $("pDesc").value=p.description||""; $("pActive").checked=p.active;
   $("pFiles").value=""; keptImages=[...(p.images||[])]; drawImgs();
@@ -253,6 +261,8 @@ async function saveProduct(){
       name, price,
       category_id: $("pCat").value || null,
       sizes: $("pSizes").value.split(",").map(s => s.trim()).filter(Boolean),
+      colors: $("pColors").value.split(",").map(s => s.trim()).filter(Boolean),
+      stock: $("pStock").value==="" ? null : Math.max(0, parseInt($("pStock").value)||0),
       description: $("pDesc").value.trim(),
       images: [...keptImages, ...newUrls],
       active: $("pActive").checked
@@ -278,6 +288,13 @@ async function deleteProduct(id){
   const paths = (p.images||[]).map(pathFromUrl).filter(Boolean);
   if(paths.length) await sb.storage.from(BUCKET).remove(paths);
   flash("Produit supprimé"); refresh();
+}
+async function adjustStock(id, d){
+  const p = products.find(x => x.id===id);
+  const n = Math.max(0, (p.stock||0) + d);
+  const { error } = await sb.from("products").update({ stock: n }).eq("id", id);
+  if(error){ flash("Erreur : " + error.message, false); return; }
+  refresh();
 }
 
 init();

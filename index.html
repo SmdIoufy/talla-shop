@@ -10,22 +10,8 @@
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--txt)}
   header{position:sticky;top:0;z-index:20;background:rgba(14,14,16,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
   .bar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;max-width:1100px;margin:auto}
-.logo {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
-    text-decoration: none;
-}
-
-.logo img {
-    display: block;
-    width: 180px;
-    height: 65px;
-    object-fit: contain;
-    object-position: left center;
-}
-  .password-link{display:inline-block;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 11px;border-radius:999px;text-decoration:none;font-size:12px;white-space:nowrap}
-  .password-link:hover{background:var(--line)}
+  .logo{display:inline-flex;align-items:center;flex-shrink:0;text-decoration:none}
+  .logo img{display:block;width:180px;height:65px;object-fit:contain;object-position:left center}
   .cartbtn{background:none;border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:15px}
   .cartbtn b{background:var(--acc);color:#000;border-radius:999px;padding:1px 8px;margin-left:6px;font-size:13px}
   header nav{display:flex;gap:8px;overflow-x:auto;padding:0 16px 12px;max-width:1100px;margin:auto}
@@ -36,12 +22,15 @@
   .sub{color:var(--mut);font-size:14px;margin-bottom:18px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
   .p{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-  .img{aspect-ratio:1/1;background:#26262c;display:flex;align-items:center;justify-content:center;font-size:54px;cursor:pointer}
+  .img{position:relative;aspect-ratio:1/1;background:#26262c;display:flex;align-items:center;justify-content:center;font-size:54px;cursor:pointer}
   .img img{width:100%;height:100%;object-fit:cover}
+  .badge{position:absolute;top:8px;left:8px;background:#ff6b6b;color:#000;font-weight:800;font-size:12px;padding:4px 10px;border-radius:999px}
   .pi{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
   .pn{font-weight:600;font-size:15px}
   .pp{font-weight:700}
+  .stk{color:#ffb84d;font-size:13px;font-weight:600}
   .add{margin-top:auto;background:var(--txt);color:#000;border:0;border-radius:10px;padding:10px;font-weight:700;cursor:pointer}
+  .add:disabled{opacity:.45;cursor:not-allowed}
   .ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;z-index:30}
   .ov.open{display:block}
   .panel{position:absolute;right:0;top:0;bottom:0;width:min(420px,100%);background:var(--card);padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
@@ -70,15 +59,12 @@
   .footer-brand{font-weight:800;letter-spacing:2px;font-size:18px}
   .footer-note{margin-top:8px;color:var(--mut);font-size:13px}
   .social-links{display:flex;justify-content:center;align-items:center;gap:18px;flex-wrap:wrap;margin:22px auto}
-  .social-links a,.social-links span{color:var(--txt);font-size:14px;text-decoration:none}
+  .social-links a{color:var(--txt);font-size:14px;text-decoration:none}
   .social-links a:hover{text-decoration:underline}
-  .social-links .unavailable{color:var(--mut)}
   .footer-copyright{border-top:1px solid var(--line);padding-top:16px;color:var(--mut);font-size:12px}
   @media(max-width:480px){
     .bar{gap:8px;padding:12px}
-    .logo{gap:7px;font-size:14px;letter-spacing:1px}
-    .logo img{width:36px;height:36px}
-    .password-link{font-size:10px;padding:7px 8px;white-space:normal;text-align:center;max-width:105px}
+    .logo img{width:130px;height:48px}
     .cartbtn{padding:7px 9px;font-size:13px;white-space:nowrap}
     .social-links{gap:14px}
   }
@@ -88,9 +74,8 @@
 <header>
   <div class="bar">
     <a class="logo" id="logo" href="index.html" aria-label="Accueil Talla Shop">
-    <img src="assets/logo.png" alt="Logo Talla Shop">
+      <img src="assets/logo.png" alt="Logo Talla Shop">
     </a>
-    
     <button class="cartbtn" onclick="openCart()" type="button">🛒 Panier<b id="count">0</b></button>
   </div>
   <nav id="nav" aria-label="Catégories de produits"></nav>
@@ -111,8 +96,10 @@
     <div class="pp" id="pm-price"></div>
     <div class="desc" id="pm-desc"></div>
     <div id="pm-sizes-wrap"><div class="pc" style="margin-bottom:6px">Taille / Pointure</div><div class="sizes" id="pm-sizes"></div></div>
+    <div id="pm-colors-wrap"><div class="pc" style="margin-bottom:6px">Couleur</div><div class="sizes" id="pm-colors"></div></div>
+    <div class="stk" id="pm-stock"></div>
     <div class="err" id="pm-err"></div>
-    <button class="add" onclick="confirmAdd()">Ajouter au panier</button>
+    <button class="add" id="pm-add" onclick="confirmAdd()">Ajouter au panier</button>
   </div>
 </div>
 
@@ -128,6 +115,7 @@
         <input id="nom" placeholder="Nom">
         <input id="adresse" placeholder="Adresse de livraison">
         <input id="tel" placeholder="Numéro de téléphone" inputmode="tel">
+        <div class="pc">Les frais de livraison et le mode de paiement seront confirmés avec vous sur WhatsApp.</div>
         <div class="err" id="err"></div>
         <button class="wa" onclick="sendWhatsApp()">Continuer sur WhatsApp</button>
       </div>
@@ -142,7 +130,6 @@
     <a href="https://www.instagram.com/mourtalla__smd/" target="_blank" rel="noopener noreferrer">Instagram</a>
     <a href="https://www.snapchat.com/add/mourtalla_smd" target="_blank" rel="noopener noreferrer">Snapchat</a>
     <a href="https://www.tiktok.com/@mourtalla_smd1" target="_blank" rel="noopener noreferrer">TikTok</a>
-    
   </nav>
   <p class="footer-copyright">&copy; <span id="footerYear">2026</span> SMD781247668. Tous droits réservés.</p>
 </footer>
@@ -155,12 +142,11 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = n => Number(n).toLocaleString("fr-FR").replace(/[\u202f\u00a0]/g," ") + " " + CONFIG.CURRENCY;
 
-let categories = [], products = [], cat = "all", cur = null, curSize = null;
+let categories = [], products = [], cat = "all", cur = null, curSize = null, curColor = null;
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch(e) {}
 
 document.title = CONFIG.STORE_NAME;
-$("logo").innerHTML = '<img src="assets/logo.png" alt="Logo Talla Shop">';;
 $("footerYear").textContent = new Date().getFullYear();
 
 async function load(){
@@ -179,21 +165,23 @@ function renderNav(){
     `<button class="${c.id===cat?'on':''}" data-id="${esc(c.id)}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("");
   $("nav").querySelectorAll("button").forEach(b => b.onclick = () => { cat = b.dataset.id; renderNav(); renderGrid(); });
 }
+
 function renderGrid(){
   const list = products.filter(p => cat==="all" || p.category_id===cat);
   const c = categories.find(c => c.id===cat);
   $("title").textContent = c ? `${c.emoji||""} ${c.name}` : "La Collection";
   $("sub").textContent = list.length + " produit" + (list.length>1?"s":"") + " disponible" + (list.length>1?"s":"");
   $("empty").style.display = list.length ? "none" : "block";
-  $("grid").innerHTML = list.map(p => `
+  $("grid").innerHTML = list.map(p => { const out = p.stock===0; return `
     <div class="p">
-      <div class="img" onclick="openP('${p.id}')">${p.images?.[0] ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy">` : "🛍️"}</div>
+      <div class="img" onclick="openP('${p.id}')">${p.images?.[0] ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}" loading="lazy">` : "🛍️"}${out ? '<span class="badge">ÉPUISÉ</span>' : ''}</div>
       <div class="pi">
         <div class="pn">${esc(p.name)}</div>
         <div class="pp">${fmt(p.price)}</div>
-        <button class="add" onclick="openP('${p.id}')">Ajouter au panier</button>
+        ${p.stock>0 && p.stock<=5 ? `<div class="stk">Plus que ${p.stock} en stock</div>` : ''}
+        <button class="add" ${out?'disabled':''} onclick="openP('${p.id}')">${out?'Épuisé':'Ajouter au panier'}</button>
       </div>
-    </div>`).join("");
+    </div>`; }).join("");
 }
 
 function showImg(i){
@@ -201,8 +189,17 @@ function showImg(i){
   $("pm-img").innerHTML = imgs[i] ? `<img src="${esc(imgs[i])}" alt="">` : "🛍️";
   $("pm-thumbs").querySelectorAll("img").forEach((t,k) => t.classList.toggle("on", k===i));
 }
+
+function pick(containerId, onPick){
+  $(containerId).querySelectorAll("button").forEach(b => b.onclick = () => {
+    onPick(b.dataset.s);
+    $(containerId).querySelectorAll("button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+  });
+}
+
 function openP(id){
-  cur = products.find(p => p.id===id); curSize = null;
+  cur = products.find(p => p.id===id); curSize = null; curColor = null;
   const imgs = cur.images || [];
   $("pm-name").textContent = cur.name;
   $("pm-price").textContent = fmt(cur.price);
@@ -210,31 +207,46 @@ function openP(id){
   $("pm-err").textContent = "";
   $("pm-thumbs").innerHTML = imgs.length > 1 ? imgs.map((u,i) => `<img src="${esc(u)}" onclick="showImg(${i})" alt="">`).join("") : "";
   showImg(0);
+
   const sizes = cur.sizes || [];
   $("pm-sizes-wrap").style.display = sizes.length ? "block" : "none";
   $("pm-sizes").innerHTML = sizes.map(s => `<button data-s="${esc(s)}">${esc(s)}</button>`).join("");
-  $("pm-sizes").querySelectorAll("button").forEach(b => b.onclick = () => {
-    curSize = b.dataset.s;
-    $("pm-sizes").querySelectorAll("button").forEach(x => x.classList.remove("on")); b.classList.add("on");
-  });
+  pick("pm-sizes", v => curSize = v);
+
+  const colors = cur.colors || [];
+  $("pm-colors-wrap").style.display = colors.length ? "block" : "none";
+  $("pm-colors").innerHTML = colors.map(s => `<button data-s="${esc(s)}">${esc(s)}</button>`).join("");
+  pick("pm-colors", v => curColor = v);
+
+  const out = cur.stock===0;
+  $("pm-stock").textContent = cur.stock==null ? "" : out ? "Article épuisé" : cur.stock + " article" + (cur.stock>1?"s":"") + " en stock";
+  $("pm-add").disabled = out;
+  $("pm-add").textContent = out ? "Épuisé" : "Ajouter au panier";
   $("pov").classList.add("open");
 }
 function closeP(){ $("pov").classList.remove("open"); }
+
+function qtyOf(id){ return cart.filter(i => i.id===id).reduce((s,i) => s+i.qty, 0); }
 function confirmAdd(){
   if((cur.sizes||[]).length && !curSize){ $("pm-err").textContent = "Veuillez choisir une taille."; return; }
-  const f = cart.find(i => i.id===cur.id && i.size===curSize);
-  if(f) f.qty++; else cart.push({id:cur.id, name:cur.name, price:cur.price, size:curSize, qty:1});
+  if((cur.colors||[]).length && !curColor){ $("pm-err").textContent = "Veuillez choisir une couleur."; return; }
+  if(cur.stock!=null && qtyOf(cur.id) >= cur.stock){ $("pm-err").textContent = "Stock maximum atteint (" + cur.stock + ")."; return; }
+  const f = cart.find(i => i.id===cur.id && i.size===curSize && i.color===curColor);
+  if(f) f.qty++; else cart.push({id:cur.id, name:cur.name, price:cur.price, size:curSize, color:curColor, stock:cur.stock, qty:1});
   save(); closeP(); openCart();
 }
 
 function save(){ try{ localStorage.setItem("cart", JSON.stringify(cart)); }catch(e){} renderCart(); }
-function change(i,d){ cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1); save(); }
+function change(i,d){
+  if(d>0 && cart[i].stock!=null && qtyOf(cart[i].id) >= cart[i].stock) return;
+  cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1); save();
+}
 function total(){ return cart.reduce((s,i) => s + i.price*i.qty, 0); }
 function renderCart(){
   $("count").textContent = cart.reduce((s,i) => s+i.qty, 0);
   $("items").innerHTML = cart.length ? cart.map((i,k) => `
     <div class="item">
-      <div>${esc(i.name)}<small>${i.size ? "Taille: "+esc(i.size)+" · " : ""}${fmt(i.price)}</small></div>
+      <div>${esc(i.name)}<small>${i.size ? "Taille: "+esc(i.size)+" · " : ""}${i.color ? "Couleur: "+esc(i.color)+" · " : ""}${fmt(i.price)}</small></div>
       <div class="qty"><button onclick="change(${k},-1)">−</button> ${i.qty} <button onclick="change(${k},1)">+</button></div>
     </div>`).join("") : '<div class="pc">Votre panier est vide.</div>';
   $("total").textContent = fmt(total());
@@ -248,7 +260,7 @@ function sendWhatsApp(){
   if(!prenom||!nom||!adresse||!tel){ $("err").textContent="Veuillez remplir tous les champs."; return; }
   if(tel.replace(/\D/g,"").length < 8){ $("err").textContent="Numéro de téléphone invalide."; return; }
   $("err").textContent = "";
-  const lines = cart.map(i => `• ${i.name}${i.size?` (Taille: ${i.size})`:""} x${i.qty} = ${fmt(i.price*i.qty)}`).join("\n");
+  const lines = cart.map(i => `• ${i.name}${i.size?` (Taille: ${i.size})`:""}${i.color?` (Couleur: ${i.color})`:""} x${i.qty} = ${fmt(i.price*i.qty)}`).join("\n");
   const msg =
 `🛍️ *NOUVELLE COMMANDE*
 
