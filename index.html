@@ -94,6 +94,11 @@
     .cartbtn{padding:7px 9px;font-size:13px;white-space:nowrap}
     .social-links{gap:14px}
   }
+  .loc{display:inline-flex;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 16px;margin-top:18px;text-decoration:none;color:var(--txt);text-align:left}
+.loc:hover{border-color:var(--txt)}
+.loc svg{width:36px;height:36px;flex-shrink:0}
+.loc b{display:block;font-size:14px}
+.loc small{color:var(--mut);font-size:12px}
 </style>
 </head>
 <body>
@@ -165,6 +170,14 @@
 <footer class="site-footer">
   <div class="footer-brand">SMD_Streetwear</div>
   <p class="footer-note">Merci de faire confiance à notre boutique.</p>
+  <a class="loc" id="loc" href="#" target="_blank" rel="noopener noreferrer">
+  <svg viewBox="0 0 48 48" aria-hidden="true">
+    <ellipse cx="24" cy="42" rx="11" ry="3.5" fill="#2a2a30"/>
+    <path d="M24 4C15.7 4 9 10.5 9 18.6 9 29.5 24 41 24 41s15-11.500 15-22.400C39 10.500 32.300 4 24 4z" fill="#ff6b6b"/>
+    <circle cx="24" cy="18.500" r="6" fill="#fff"/>
+  </svg>
+  <span><b>Notre localisation</b><small>Voir sur Google Maps</small></span>
+</a>
   <nav class="social-links" aria-label="Réseaux sociaux">
     <a href="https://www.instagram.com/mourtalla__smd/" target="_blank" rel="noopener noreferrer">Instagram</a>
     <a href="https://www.snapchat.com/add/mourtalla_smd" target="_blank" rel="noopener noreferrer">Snapchat</a>
@@ -192,6 +205,7 @@ try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch(e) {}
 
 document.title = CONFIG.STORE_NAME;
 $("footerYear").textContent = new Date().getFullYear();
+if(CONFIG.MAPS_URL) $("loc").href = CONFIG.MAPS_URL; else $("loc").style.display = "none";
 
 /* ---------- Recherche (icône) ---------- */
 let query = "";

@@ -7,4 +7,6 @@ const CONFIG = {
   // Supabase > Project Settings > API
   SUPABASE_URL: "https://nbiktfsemyzbjsbqefrw.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_x5-DahSdX2z24xCgfr7umg_eb6DNTlY",
+
+  MAPS_URL: "https://maps.app.goo.gl/W9rwv75QiQKJ4Wv8A",
 };
