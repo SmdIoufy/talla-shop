@@ -75,7 +75,9 @@
         <h2 id="pTitle">Ajouter un produit</h2>
         <input type="hidden" id="pId">
         <label>Nom du produit</label><input id="pName" placeholder="Ex : Sneaker Noire Supreme">
-        <label>Prix (FCFA)</label><input id="pPrice" type="number" min="0" inputmode="numeric" placeholder="70000">
+        <label>Prix actuel (FCFA)</label><input id="pPrice" type="number" min="0" inputmode="numeric" placeholder="70000">
+        <label>Ancien prix barré (facultatif, doit être supérieur au prix actuel)</label>
+        <input id="pOld" type="number" min="0" inputmode="numeric" placeholder="90000">
         <label>Catégorie</label><select id="pCat"></select>
         <label>Tailles disponibles (séparées par des virgules, laisser vide si aucune)</label>
         <input id="pSizes" placeholder="S, M, L, XL  ou  40, 41, 42, 43">
@@ -200,9 +202,13 @@ function renderProducts(){
     const c = categories.find(c => c.id===p.category_id);
     const th = p.images?.[0] ? `<img class="th" src="${esc(p.images[0])}" alt="">` : `<div class="th">🛍️</div>`;
     const stockTxt = p.stock==null ? "Stock illimité" : (p.stock===0 ? "ÉPUISÉ" : "Stock : "+p.stock);
+    const promo = p.old_price > p.price;
+    const priceTxt = promo ? `${fmt(p.price)} (avant ${fmt(p.old_price)})` : fmt(p.price);
     return `<div class="it">${th}
-      <div class="grow"><b>${esc(p.name)}</b><span class="mut">${fmt(p.price)} · ${esc(c?.name || "Sans catégorie")} · ${stockTxt}${p.active ? "" : " · masqué"}</span></div>
+      <div class="grow"><b>${esc(p.name)}</b><span class="mut">${priceTxt} · ${esc(c?.name || "Sans catégorie")} · ${stockTxt}${p.active ? "" : " · masqué"}</span></div>
       ${p.stock==null ? "" : `<button class="btn ghost" onclick="adjustStock('${p.id}',-1)">−1</button><button class="btn ghost" onclick="adjustStock('${p.id}',1)">+1</button>`}
+      <button class="btn ghost" onclick="lowerPrice('${p.id}')">Baisser le prix</button>
+      ${promo ? `<button class="btn ghost" onclick="endPromo('${p.id}')">Fin promo</button>` : ""}
       <button class="btn ghost" onclick="editProduct('${p.id}')">Modifier</button>
       <button class="btn red" onclick="deleteProduct('${p.id}')">Supprimer</button>
     </div>`; }).join("") : '<div class="mut">Aucun produit. Ajoutez le premier ci-dessus.</div>';
@@ -216,13 +222,13 @@ function drawImgs(){
 function removeKept(i){ keptImages.splice(i,1); drawImgs(); }
 function previewNew(){ drawImgs(); }
 function resetProduct(){
-  $("pColors").value=""; $("pStock").value="";
+  $("pColors").value=""; $("pStock").value=""; $("pOld").value="";
   $("pId").value=""; $("pName").value=""; $("pPrice").value=""; $("pCat").value=""; $("pSizes").value=""; $("pDesc").value="";
   $("pFiles").value=""; $("pActive").checked=true; keptImages=[]; drawImgs(); $("pTitle").textContent="Ajouter un produit";
 }
 function editProduct(id){
   const p = products.find(x => x.id===id);
-  $("pColors").value=(p.colors||[]).join(", "); $("pStock").value=p.stock ?? "";
+  $("pColors").value=(p.colors||[]).join(", "); $("pStock").value=p.stock ?? ""; $("pOld").value=p.old_price ?? "";
   $("pId").value=p.id; $("pName").value=p.name; $("pPrice").value=p.price; $("pCat").value=p.category_id||"";
   $("pSizes").value=(p.sizes||[]).join(", "); $("pDesc").value=p.description||""; $("pActive").checked=p.active;
   $("pFiles").value=""; keptImages=[...(p.images||[])]; drawImgs();
@@ -254,11 +260,14 @@ async function saveProduct(){
   const name = $("pName").value.trim(), price = parseInt($("pPrice").value);
   if(!name){ flash("Le nom est obligatoire.", false); return; }
   if(isNaN(price) || price < 0){ flash("Indiquez un prix valide.", false); return; }
+  let oldPrice = parseInt($("pOld").value);
+  if(isNaN(oldPrice) || oldPrice <= price) oldPrice = null;
   const btn = $("pSave"); btn.disabled = true; btn.textContent = "Enregistrement…";
   try{
     const newUrls = await uploadImages([...$("pFiles").files]);
     const row = {
       name, price,
+      old_price: oldPrice,
       category_id: $("pCat").value || null,
       sizes: $("pSizes").value.split(",").map(s => s.trim()).filter(Boolean),
       colors: $("pColors").value.split(",").map(s => s.trim()).filter(Boolean),
@@ -295,6 +304,26 @@ async function adjustStock(id, d){
   const { error } = await sb.from("products").update({ stock: n }).eq("id", id);
   if(error){ flash("Erreur : " + error.message, false); return; }
   refresh();
+}
+
+/* ---------- Promotions ---------- */
+async function lowerPrice(id){
+  const p = products.find(x => x.id===id);
+  const v = prompt("Nouveau prix (actuel : " + fmt(p.price) + ")");
+  if(v===null) return;
+  const n = parseInt(v);
+  if(isNaN(n) || n < 0 || n >= p.price){ flash("Le nouveau prix doit être inférieur au prix actuel.", false); return; }
+  const start = p.old_price > p.price ? p.old_price : p.price;
+  const { error } = await sb.from("products").update({ price: n, old_price: start }).eq("id", id);
+  if(error){ flash("Erreur : " + error.message, false); return; }
+  flash("Prix baissé ✔ (l'ancien prix apparaît barré)"); refresh();
+}
+async function endPromo(id){
+  const p = products.find(x => x.id===id);
+  if(!confirm("Remettre le prix à " + fmt(p.old_price) + " et retirer la promo ?")) return;
+  const { error } = await sb.from("products").update({ price: p.old_price, old_price: null }).eq("id", id);
+  if(error){ flash("Erreur : " + error.message, false); return; }
+  flash("Promo terminée ✔"); refresh();
 }
 
 init();
